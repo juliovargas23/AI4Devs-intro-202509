@@ -38,6 +38,19 @@ async function copyToClipboard(text) {
   return navigator.clipboard.writeText(text);
 }
 
+// Unicode-safe string reversal
+const segmenter =
+  typeof Intl !== "undefined" && Intl.Segmenter
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : null;
+
+function reverseString(value) {
+  const units = segmenter
+    ? [...segmenter.segment(value)].map(({ segment }) => segment)
+    : Array.from(value);
+  return units.reverse().join("");
+}
+
 // Section 1: Button-based reverse
 const input1 = document.getElementById("inputString1");
 const btn = document.getElementById("reverseBtn");
@@ -62,7 +75,7 @@ input1.addEventListener("input", () => {
 });
 
 btn.addEventListener("click", () => {
-  const reversed = input1.value.split("").reverse().join("");
+  const reversed = reverseString(input1.value);
   output1.textContent = reversed;
   if (reversed) copyBtn1.disabled = false;
 });
@@ -101,7 +114,7 @@ input2.addEventListener("input", () => {
   }
 
   if (input2.value.length >= 3) {
-    const reversed = input2.value.split("").reverse().join("");
+    const reversed = reverseString(input2.value);
     output2.textContent = reversed;
     copyBtn2.disabled = !reversed;
   } else {

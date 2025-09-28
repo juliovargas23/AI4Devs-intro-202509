@@ -2,9 +2,16 @@
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
-  toast.className = "show";
-  setTimeout(() => {
-    toast.className = toast.className.replace("show", "");
+  
+  // Clear any existing timeout to prevent multiple timers
+  if (toast._timeoutId) {
+    clearTimeout(toast._timeoutId);
+  }
+  
+  toast.classList.add("show");
+  toast._timeoutId = setTimeout(() => {
+    toast.classList.remove("show");
+    toast._timeoutId = null;
   }, 2000);
 }
 
@@ -17,12 +24,15 @@ async function copyToClipboard(text) {
     document.body.appendChild(textArea);
     textArea.select();
     try {
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
+      const success = document.execCommand('copy');
+      if (!success) {
+        throw new Error('execCommand copy returned false');
+      }
       return Promise.resolve();
     } catch (err) {
-      document.body.removeChild(textArea);
       return Promise.reject(err);
+    } finally {
+      document.body.removeChild(textArea);
     }
   }
   return navigator.clipboard.writeText(text);

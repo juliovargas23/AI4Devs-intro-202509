@@ -21,6 +21,14 @@ async function copyToClipboard(text) {
     // Fallback for older browsers
     const textArea = document.createElement("textarea");
     textArea.value = text;
+    
+    // Make textarea invisible and non-interactive to prevent layout shifts and virtual keyboard
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "-9999px";
+    textArea.readOnly = true;
+    textArea.setAttribute("aria-hidden", "true");
+    
     document.body.appendChild(textArea);
     textArea.select();
     try {

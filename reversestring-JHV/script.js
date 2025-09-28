@@ -8,6 +8,26 @@ function showToast(message) {
   }, 2000);
 }
 
+// Clipboard helper with fallback
+async function copyToClipboard(text) {
+  if (!navigator.clipboard) {
+    // Fallback for older browsers
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return Promise.resolve();
+    } catch (err) {
+      document.body.removeChild(textArea);
+      return Promise.reject(err);
+    }
+  }
+  return navigator.clipboard.writeText(text);
+}
+
 // Section 1: Button-based reverse
 const input1 = document.getElementById("inputString1");
 const btn = document.getElementById("reverseBtn");
@@ -37,10 +57,15 @@ btn.addEventListener("click", () => {
   if (reversed) copyBtn1.disabled = false;
 });
 
-copyBtn1.addEventListener("click", () => {
+copyBtn1.addEventListener("click", async () => {
   if (output1.textContent) {
-    navigator.clipboard.writeText(output1.textContent);
-    showToast("✅ Copied to clipboard!");
+    try {
+      await copyToClipboard(output1.textContent);
+      showToast("✅ Copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      showToast("❌ Failed to copy");
+    }
   }
 });
 
@@ -75,10 +100,15 @@ input2.addEventListener("input", () => {
   }
 });
 
-copyBtn2.addEventListener("click", () => {
+copyBtn2.addEventListener("click", async () => {
   if (output2.textContent) {
-    navigator.clipboard.writeText(output2.textContent);
-    showToast("✅ Copied to clipboard!");
+    try {
+      await copyToClipboard(output2.textContent);
+      showToast("✅ Copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+      showToast("❌ Failed to copy");
+    }
   }
 });
 

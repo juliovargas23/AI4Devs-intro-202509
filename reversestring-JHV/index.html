@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reverse String</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    header {
+      background: #4a90e2;
+      color: white;
+      text-align: center;
+      padding: 1.5rem;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #4a90e2;
+      margin-bottom: 1rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 0.5rem;
+      margin-right: 0.5rem;
+    }
+
+    button:hover:enabled {
+      background: #357ABD;
+    }
+
+    button:disabled {
+      background: #a6c8f0;
+      cursor: not-allowed;
+    }
+
+    .output-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .output-container span {
+      font-weight: bold;
+      color: #222;
+      min-width: 120px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+      background: #f0f2f5;
+      font-size: 1.2rem;
+    }
+
+    /* Toast popup */
+    #toast {
+      visibility: hidden;
+      min-width: 220px;
+      background: #4a90e2;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 0.8rem;
+      position: fixed;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      font-size: 1rem;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.4s, bottom 0.4s;
+    }
+
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+      bottom: 50px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🔄 Reverse String</h1>
+  </header>
+
+  <main>
+    <!-- Section 1 -->
+    <section>
+      <h2>1️⃣ Reverse with Button</h2>
+      <p>Enter at least 3 characters, then click the button to reverse the string:</p>
+      <input type="text" id="inputString1" placeholder="Type text here...">
+      <button id="reverseBtn" disabled>Reverse</button>
+      <button id="clearBtn1" style="display:none;">Clear</button>
+      <div class="output-container">
+        <p>Reversed String: <span id="outputString1"></span></p>
+        <button id="copyBtn1" disabled>📋 Copy</button>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section>
+      <h2>2️⃣ Real-Time Reverse</h2>
+      <p>Start typing (min 3 characters) and see the reverse in real time:</p>
+      <input type="text" id="inputString2" placeholder="Type text here...">
+      <button id="clearBtn2" style="display:none;">Clear</button>
+      <div class="output-container">
+        <p>Reversed String: <span id="outputString2"></span></p>
+        <button id="copyBtn2" disabled>📋 Copy</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    ✨ Have fun reversing your strings! 🚀💡🎨
+  </footer>
+
+  <!-- Toast element -->
+  <div id="toast">✅ Copied to clipboard!</div>
+
+  <script src="script.js"></script>
+</body>
+</html>

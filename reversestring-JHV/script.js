@@ -17,7 +17,7 @@ function showToast(message) {
 
 // Clipboard helper with fallback
 async function copyToClipboard(text) {
-  if (!navigator.clipboard) {
+  if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
     // Fallback for older browsers
     const textArea = document.createElement("textarea");
     textArea.value = text;
@@ -46,16 +46,67 @@ async function copyToClipboard(text) {
   return navigator.clipboard.writeText(text);
 }
 
-// Unicode-safe string reversal
+// Unicode-safe string reversal with fallback when Intl.Segmenter is missing
 const segmenter =
-  typeof Intl !== "undefined" && Intl.Segmenter
+  typeof Intl !== "undefined" && typeof Intl.Segmenter === "function"
     ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
     : null;
+
+const COMBINING_MARK_REGEX = /[\u0300-\u036F\u1AB0-\u1AFF\u1DC0-\u1DFF\u20D0-\u20FF\uFE20-\uFE2F]/;
+const VARIATION_SELECTOR_REGEX = /[\uFE0E\uFE0F]/;
+
+let SKIN_TONE_MODIFIER_REGEX;
+try {
+  SKIN_TONE_MODIFIER_REGEX = new RegExp("[\\u{1F3FB}-\\u{1F3FF}]", "u");
+} catch (error) {
+  // Fallback for engines without the Unicode flag
+  SKIN_TONE_MODIFIER_REGEX = /\uD83C[\uDFFB-\uDFFF]/;
+}
+const ZERO_WIDTH_JOINER = "\u200D";
+
+function splitIntoGraphemesWithoutSegmenter(value) {
+  const codePoints = Array.from(value);
+  const units = [];
+  let index = 0;
+
+  while (index < codePoints.length) {
+    let cluster = codePoints[index++];
+
+    while (index < codePoints.length) {
+      const next = codePoints[index];
+
+      if (next === ZERO_WIDTH_JOINER) {
+        cluster += next;
+        index++;
+        if (index < codePoints.length) {
+          cluster += codePoints[index++];
+        }
+        continue;
+      }
+
+      if (
+        COMBINING_MARK_REGEX.test(next) ||
+        VARIATION_SELECTOR_REGEX.test(next) ||
+        SKIN_TONE_MODIFIER_REGEX.test(next)
+      ) {
+        cluster += next;
+        index++;
+        continue;
+      }
+
+      break;
+    }
+
+    units.push(cluster);
+  }
+
+  return units;
+}
 
 function reverseString(value) {
   const units = segmenter
     ? [...segmenter.segment(value)].map(({ segment }) => segment)
-    : Array.from(value);
+    : splitIntoGraphemesWithoutSegmenter(value);
   return units.reverse().join("");
 }
 
@@ -66,47 +117,51 @@ const output1 = document.getElementById("outputString1");
 const copyBtn1 = document.getElementById("copyBtn1");
 const clearBtn1 = document.getElementById("clearBtn1");
 
-input1.addEventListener("input", () => {
-  if (input1.value.length > 0) {
-    clearBtn1.style.display = "inline-block";
-  } else {
-    clearBtn1.style.display = "none";
-  }
-
-  if (input1.value.length >= 3) {
-    btn.disabled = false;
-  } else {
-    btn.disabled = true;
-    output1.textContent = "";
-    copyBtn1.disabled = true;
-  }
-});
-
-btn.addEventListener("click", () => {
-  const reversed = reverseString(input1.value);
-  output1.textContent = reversed;
-  if (reversed) copyBtn1.disabled = false;
-});
-
-copyBtn1.addEventListener("click", async () => {
-  if (output1.textContent) {
-    try {
-      await copyToClipboard(output1.textContent);
-      showToast("✅ Copied to clipboard!");
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
-      showToast("❌ Failed to copy");
+if (input1 && btn && output1 && copyBtn1 && clearBtn1) {
+  input1.addEventListener("input", () => {
+    if (input1.value.length > 0) {
+      clearBtn1.style.display = "inline-block";
+    } else {
+      clearBtn1.style.display = "none";
     }
-  }
-});
 
-clearBtn1.addEventListener("click", () => {
-  input1.value = "";
-  output1.textContent = "";
-  btn.disabled = true;
-  copyBtn1.disabled = true;
-  clearBtn1.style.display = "none";
-});
+    if (input1.value.length >= 3) {
+      btn.disabled = false;
+    } else {
+      btn.disabled = true;
+      output1.textContent = "";
+      copyBtn1.disabled = true;
+    }
+  });
+
+  btn.addEventListener("click", () => {
+    const reversed = reverseString(input1.value);
+    output1.textContent = reversed;
+    if (reversed) copyBtn1.disabled = false;
+  });
+
+  copyBtn1.addEventListener("click", async () => {
+    if (output1.textContent) {
+      try {
+        await copyToClipboard(output1.textContent);
+        showToast("✅ Copied to clipboard!");
+      } catch (error) {
+        console.error("Failed to copy to clipboard:", error);
+        showToast("❌ Failed to copy");
+      }
+    }
+  });
+
+  clearBtn1.addEventListener("click", () => {
+    input1.value = "";
+    output1.textContent = "";
+    btn.disabled = true;
+    copyBtn1.disabled = true;
+    clearBtn1.style.display = "none";
+  });
+} else {
+  console.warn("Reverse section 1 could not initialise; missing DOM elements.");
+}
 
 // Section 2: Real-time reverse
 const input2 = document.getElementById("inputString2");
@@ -114,38 +169,42 @@ const output2 = document.getElementById("outputString2");
 const copyBtn2 = document.getElementById("copyBtn2");
 const clearBtn2 = document.getElementById("clearBtn2");
 
-input2.addEventListener("input", () => {
-  if (input2.value.length > 0) {
-    clearBtn2.style.display = "inline-block";
-  } else {
-    clearBtn2.style.display = "none";
-  }
+if (input2 && output2 && copyBtn2 && clearBtn2) {
+  input2.addEventListener("input", () => {
+    if (input2.value.length > 0) {
+      clearBtn2.style.display = "inline-block";
+    } else {
+      clearBtn2.style.display = "none";
+    }
 
-  if (input2.value.length >= 3) {
-    const reversed = reverseString(input2.value);
-    output2.textContent = reversed;
-    copyBtn2.disabled = !reversed;
-  } else {
+    if (input2.value.length >= 3) {
+      const reversed = reverseString(input2.value);
+      output2.textContent = reversed;
+      copyBtn2.disabled = !reversed;
+    } else {
+      output2.textContent = "";
+      copyBtn2.disabled = true;
+    }
+  });
+
+  copyBtn2.addEventListener("click", async () => {
+    if (output2.textContent) {
+      try {
+        await copyToClipboard(output2.textContent);
+        showToast("✅ Copied to clipboard!");
+      } catch (error) {
+        console.error("Failed to copy to clipboard:", error);
+        showToast("❌ Failed to copy");
+      }
+    }
+  });
+
+  clearBtn2.addEventListener("click", () => {
+    input2.value = "";
     output2.textContent = "";
     copyBtn2.disabled = true;
-  }
-});
-
-copyBtn2.addEventListener("click", async () => {
-  if (output2.textContent) {
-    try {
-      await copyToClipboard(output2.textContent);
-      showToast("✅ Copied to clipboard!");
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
-      showToast("❌ Failed to copy");
-    }
-  }
-});
-
-clearBtn2.addEventListener("click", () => {
-  input2.value = "";
-  output2.textContent = "";
-  copyBtn2.disabled = true;
-  clearBtn2.style.display = "none";
-});
+    clearBtn2.style.display = "none";
+  });
+} else {
+  console.warn("Reverse section 2 could not initialise; missing DOM elements.");
+}
